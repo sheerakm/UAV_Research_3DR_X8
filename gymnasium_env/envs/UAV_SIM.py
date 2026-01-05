@@ -76,7 +76,7 @@ class UAVEnv(gym.Env):
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
-        self.x[:] = 0.0
+        self.x = np.zeros(13, dtype=np.float32)
 
         for buf in self.delay_buffers.values():
             buf_len = len(buf)
@@ -123,6 +123,7 @@ class UAVEnv(gym.Env):
 
         terminated = False
         truncated = False
+        self.x = np.zeros(13, dtype=np.float32)
 
         return self.x.copy(), reward, terminated, truncated, {}
 
