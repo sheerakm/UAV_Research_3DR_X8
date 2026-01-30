@@ -24,12 +24,12 @@ print(obs)
 while True:
     print("starting anew ")
 
-    action, _states = model.predict(obs)
+    action, _states = model.predict(obs) # added 0
     obs, rewards, terminated, truncated, info = env.step(action)
     print(obs)
 
     if terminated or truncated :
-        obs = env.reset()
+        obs, info = env.reset()
         print("finished")
         print("starting anew ")
         print(obs)

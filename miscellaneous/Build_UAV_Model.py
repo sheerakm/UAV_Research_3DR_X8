@@ -28,7 +28,7 @@ def Build_UAV_Model():
     freq = 100
     time_step = 1 / freq
 
-    A = np.zeros((13, 13))
+    A = np.zeros((13, 13), dtype=np.float32)
 
     A[0][0] = constant_vals["X_u"]
     A[0][6] = -g
@@ -51,7 +51,7 @@ def Build_UAV_Model():
     A[11][11] = -constant_vals["lag"]
     A[12][12] = -constant_vals["lag"]
 
-    B = np.zeros((13, 4))
+    B = np.zeros((13, 4) , dtype=np.float32)
 
     B[5][3] = constant_vals["lag"] * constant_vals["lead"]
     B[9][0] = constant_vals["lag"]

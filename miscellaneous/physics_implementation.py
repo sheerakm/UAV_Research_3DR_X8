@@ -21,6 +21,24 @@ ṙ
 δcol_lag
 δpeḋ_lag
 [du, dv, dw, dp, dq, dr, dtheta, dphi, dpsi, delta_lat_lag, delta_lon_lag, delta_col_lag, delta_ped_lag]
+
+
+| Index | Variable      | Meaning                       |
+| ----- | ------------- | ----------------------------- |
+| 0     | du            | forward velocity              |
+| 1     | dv            | lateral velocity              |
+| 2     | dw            | vertical velocity             |
+| 3     | dp            | roll rate                     |
+| 4     | dq            | pitch rate                    |
+| 5     | dr            | yaw rate                      |
+| 6     | dtheta        | pitch angle                   |
+| 7     | dphi          | roll angle                    |
+| 8     | dpsi          | yaw angle                     |
+| 9     | delta_lat_lag | lateral input (aileron)       |
+| 10    | delta_lon_lag | longitudinal input (elevator) |
+| 11    | delta_col_lag | vertical input (collective)   |
+| 12    | delta_ped_lag | yaw input (pedal)             |
+
 """
 
 du, dv, dw, dp, dq, dr, dtheta, dphi, dpsi, delta_lat_lag, delta_lon_lag, delta_col_lag, delta_ped_lag = np.zeros(13)
@@ -122,11 +140,12 @@ T = 5.0
 steps = int(T / dt)
 
 x = np.zeros(13)
+x[0] = 1.0
 history = []
 
 for k in range(steps):
     if k * dt > 1.0:
-        action = np.array([0.5, 0.0, 0.0, 0.0])  # lateral step
+        action = np.array([0.0, 0.0, 0.0, 0.0])  # lateral step
     else:
         action = np.zeros(4)
 
@@ -148,5 +167,79 @@ t = np.arange(steps) * dt
 plt.plot(t, history[:,1], label="v")
 plt.plot(t, history[:,3], label="p")
 plt.plot(t, history[:,7], label="phi")
+plt.xlabel("y [0.5, 0.0, 0.0, 0.0]")
+
+plt.legend()
+plt.show()
+
+
+#second direction
+
+
+x = np.zeros(13)
+history = []
+
+for k in range(steps):
+    if k * dt > 1.0:
+        action = np.array([0.0, 0.0, 0.0, 0.0])  # lateral step
+    else:
+        action = np.zeros(4)
+
+    x = step(x, action)
+    history.append(x.copy())
+
+history = np.array(history)
+
+
+
+t = np.arange(steps) * dt
+
+# plt.figure()
+# plt.plot(t, history[:, 3], label="p (roll rate)")
+# plt.plot(t, history[:, 1], label="v (lateral velocity)")
+# plt.legend()
+# plt.show()
+
+plt.plot(t, history[:,0], label="u")
+plt.plot(t, history[:,4], label="q")
+plt.plot(t, history[:,6], label="theta")
+
+plt.xlabel("y = [0.0, 0.0, 0.0, 0.0]")
+
+plt.legend()
+plt.show()
+
+
+# third direction
+
+
+x = np.zeros(13)
+history = []
+
+for k in range(steps):
+    if k * dt > 1.0:
+        action = np.array([0.0, 0.0, 0.0, 0.0])  # lateral step
+    else:
+        action = np.zeros(4)
+
+    x = step(x, action)
+    history.append(x.copy())
+
+history = np.array(history)
+
+
+
+t = np.arange(steps) * dt
+
+# plt.figure()
+# plt.plot(t, history[:, 3], label="p (roll rate)")
+# plt.plot(t, history[:, 1], label="v (lateral velocity)")
+# plt.legend()
+# plt.show()
+
+plt.plot(t, history[:,5], label="r")
+plt.plot(t, history[:,8], label="psi")
+plt.xlabel("y = [0.0, 0.0, 0.0, 0.5]")
+
 plt.legend()
 plt.show()

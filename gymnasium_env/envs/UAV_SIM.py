@@ -14,11 +14,19 @@ from miscellaneous.Build_UAV_Model import Build_UAV_Model
 class UAVEnv(gym.Env):
     # metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self, render_mode=None, size=5):
-        self.dt = 0.01
+    def __init__(self, render_mode=None, size=5, max_episode_steps=1000):
+
+
+        self.dt = np.float32(0.01)
         self.x = np.zeros(13)
 
         self.A, self.B, buffer_lon, buffer_lat, buffer_col, buffer_ped, constant_vals = Build_UAV_Model()
+
+        eigenvalues = np.linalg.eigvals(self.A)
+        print("Max eigenvalue real part:", np.max(np.real(eigenvalues)))
+
+        self.current_step = 0
+        self.max_episode_steps = max_episode_steps
 
 
         self.delay_buffers = {
@@ -77,6 +85,9 @@ class UAVEnv(gym.Env):
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
         self.x = np.zeros(13, dtype=np.float32)
+        self.current_step = 0
+
+        self.x[2] = 1.0
 
         for buf in self.delay_buffers.values():
             buf_len = len(buf)
@@ -101,15 +112,23 @@ class UAVEnv(gym.Env):
         # if self.render_mode == "human":
         #     self._render_frame()
 
+        # action = np.array(action, dtype=np.float32) * 0.01
+
+        damping = -0.001 * self.x[[3, 4, 5, 6, 7, 8]]  # Damp rates and angles
+        action = action * 0.00001 + damping[:4]
+
+
         self.delay_buffers["lon"].append(action[1])
         self.delay_buffers["lat"].append(action[0])
         self.delay_buffers["col"].append(action[2])
         self.delay_buffers["ped"].append(action[3])
 
         delayed_input = np.array([self.delay_buffers["lon"][0], self.delay_buffers["lat"][0], self.delay_buffers["col"][0], self.delay_buffers["ped"][0]])
-
+        self.current_step += 1
         dx = self.A @ self.x + self.B @ delayed_input
-        self.x = self.x + dx * self.dt
+        self.x = (self.x + dx * self.dt).astype(np.float32)
+
+        print("dx is ", np.max(np.abs(dx)))
 
         dp = self.x[3]
         dq = self.x[4]
@@ -118,14 +137,15 @@ class UAVEnv(gym.Env):
         dtheta = self.x[6]
         dphi = self.x[7]
         dpsi = self.x[8]
+        reward = float(-(dphi ** 2 + dtheta ** 2 + dp ** 2 + dq ** 2 + dr ** 2))
 
-        reward = -(dphi ** 2 + dtheta ** 2 + dp ** 2 + dq ** 2 + dr ** 2)
+        if np.max(np.abs(self.x)) > 100.0 or np.isnan(self.x).any() or np.isinf(self.x).any():
+            return self.x.copy(), -100.0, True, False, {}
 
-        terminated = False
-        truncated = False
-        self.x = np.zeros(13, dtype=np.float32)
+        truncated = self.current_step >= self.max_episode_steps
+        # self.x = np.zeros(13, dtype=np.float32)
 
-        return self.x.copy(), reward, terminated, truncated, {}
+        return self.x.copy(), reward, False, truncated, {}
 
     # def render(self):
     #     if self.render_mode == "rgb_array":
