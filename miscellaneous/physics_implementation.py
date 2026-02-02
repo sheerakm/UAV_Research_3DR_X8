@@ -140,7 +140,6 @@ T = 5.0
 steps = int(T / dt)
 
 x = np.zeros(13)
-x[0] = 1.0
 history = []
 
 for k in range(steps):
@@ -148,7 +147,6 @@ for k in range(steps):
         action = np.array([0.0, 0.0, 0.0, 0.0])  # lateral step
     else:
         action = np.zeros(4)
-
     x = step(x, action)
     history.append(x.copy())
 
@@ -177,6 +175,7 @@ plt.show()
 
 
 x = np.zeros(13)
+x[0] = 1.0
 history = []
 
 for k in range(steps):
@@ -215,6 +214,8 @@ plt.show()
 
 x = np.zeros(13)
 history = []
+
+x[0] = 1.0
 
 for k in range(steps):
     if k * dt > 1.0:
